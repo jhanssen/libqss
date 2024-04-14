@@ -16,22 +16,22 @@ namespace qss
         typedef typename std::deque<QSSFragmentPair>::iterator Itr;
 
         Document() {}
-        Document(const QString& qss);
+        Document(const std::string& qss);
         virtual ~Document() {}
 
         Document& addFragment(const Fragment& fragment, bool enabled = true);
-        Document& addFragment(const QString& fragment, bool enabled = true);
+        Document& addFragment(const std::string& fragment, bool enabled = true);
         Document& enableFragment(int index, bool enable = true);
         Document& toggleFragment(int index);
-        Document& removeFragment(const QString& fragment);
+        Document& removeFragment(const std::string& fragment);
         Document& removeFragment(int index);
-        Document& operator+=(const QString& fragment);
+        Document& operator+=(const std::string& fragment);
         Document& operator+=(const Document& qss);
 
-        Document inheritable(const QString& selector) const;
+        Document inheritable(const std::string& selector) const;
 
-        void parse(const QString&);
-        QString toString() const;
+        void parse(const std::string&);
+        std::string toString() const;
 
         const Fragment& operator[](int index) const { return m_fragments[index].first; }
         std::size_t totalFragments() const noexcept { return m_fragments.size(); }

@@ -14,21 +14,21 @@ namespace qss
         typedef typename PropertyMap::iterator Itr;
 
         PropertyBlock() {}
-        PropertyBlock(const QString& str);
+        PropertyBlock(const std::string& str);
         PropertyBlock& operator=(const PropertyBlock& block);
 
-        PropertyBlock& addParam(const QString& key, const QString& value);
+        PropertyBlock& addParam(const std::string& key, const std::string& value);
         PropertyBlock& addParam(const QStringPairs& params);
-        PropertyBlock& enableParam(const QString& key, bool enable = true);
-        PropertyBlock& toggleParam(const QString& key);
-        PropertyBlock& remove(const QString& key);
-        PropertyBlock& remove(const std::vector<QString>& keys);
+        PropertyBlock& enableParam(const std::string& key, bool enable = true);
+        PropertyBlock& toggleParam(const std::string& key);
+        PropertyBlock& remove(const std::string& key);
+        PropertyBlock& remove(const std::vector<std::string>& keys);
 
         PropertyBlock& operator+=(const PropertyBlock& block);
-        PropertyBlock& operator+=(const QString& block);
+        PropertyBlock& operator+=(const std::string& block);
 
-        void    parse(const QString& input);
-        QString toString() const;
+        void    parse(const std::string& input);
+        std::string toString() const;
         std::size_t size() const noexcept;
 
         ConstItr cbegin() const noexcept { return m_params.cbegin(); }

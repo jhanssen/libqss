@@ -16,25 +16,25 @@ namespace qss
         };
 
         SelectorElement() {}
-        SelectorElement(const QString& str);
+        SelectorElement(const std::string& str);
         SelectorElement& operator=(const SelectorElement& fragment);
 
-        SelectorElement& select(const QString& sel);
-        SelectorElement& on(const QString& key, const QString& value);
+        SelectorElement& select(const std::string& sel);
+        SelectorElement& on(const std::string& key, const std::string& value);
         SelectorElement& on(const QStringPairs& params);
-        SelectorElement& sub(const QString& name);
-        SelectorElement& when(const QString& pcl);
-        SelectorElement& name(const QString& str);
+        SelectorElement& sub(const std::string& name);
+        SelectorElement& when(const std::string& pcl);
+        SelectorElement& name(const std::string& str);
 
-        void    parse(const QString& input);
-        QString toString() const;
+        void    parse(const std::string& input);
+        std::string toString() const;
         bool    isGeneralizedFrom(const SelectorElement& fragment) const;
         bool    isSpecificThan(const SelectorElement& fragment) const;
-        QString id() const { return m_id; }
-        QString psuedoClass() const { return m_psuedoClass; }
-        QString subControl() const { return m_subControl; }
-        QString name() const { return m_name; }
-        QString value(const QString& key) const;
+        std::string id() const { return m_id; }
+        std::string psuedoClass() const { return m_psuedoClass; }
+        std::string subControl() const { return m_subControl; }
+        std::string name() const { return m_name; }
+        std::string value(const std::string& key) const;
 
         PositionType position() const noexcept { return m_position; }
 
@@ -48,18 +48,18 @@ namespace qss
 
     private:
 
-        static const std::unordered_map<int, QString> Combinators;
+        static const std::unordered_map<int, std::string> Combinators;
 
         friend class Selector;
 
-        QString extractSubControlAndPsuedoClass(const QString& str);
-        QString extractParams(const QString& str);
-        void    extractNameAndSelector(const QString& str);
+        std::string extractSubControlAndPsuedoClass(const std::string& str);
+        std::string extractParams(const std::string& str);
+        void    extractNameAndSelector(const std::string& str);
 
-        QString      m_name;
-        QString      m_id;
-        QString      m_subControl;
-        QString      m_psuedoClass;
+        std::string      m_name;
+        std::string      m_id;
+        std::string      m_subControl;
+        std::string      m_psuedoClass;
         QStringMap   m_params;
         PositionType m_position = PARENT;
         QStringList  m_classes;

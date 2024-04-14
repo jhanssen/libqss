@@ -12,8 +12,8 @@ namespace qss
         IParseable() {}
         virtual ~IParseable() {}
 
-        virtual QString toString() const = 0;
-        virtual void    parse(const QString& str) = 0;
+        virtual std::string toString() const = 0;
+        virtual void    parse(const std::string& str) = 0;
     };
 }
 

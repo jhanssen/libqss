@@ -1,6 +1,6 @@
 #include "../include/qssexception.h"
 
-const std::unordered_map<int, QString> qss::Exception::Messages {
+const std::unordered_map<int, std::string> qss::Exception::Messages {
     { Exception::HEADER_PARAM_INVALID, "Header param is invalid" },
     { Exception::BLOCK_PARAM_INVALID, "Block param is invalid" },
     { Exception::SELECTOR_INVALID, "Selector is invalid" },
@@ -9,7 +9,7 @@ const std::unordered_map<int, QString> qss::Exception::Messages {
     { Exception::ILL_FORMED_HEADER_PARAM, "Header param is incomplete" }
 };
 
-QString qss::Exception::what() const
+std::string qss::Exception::what() const
 {
-    return QString{ Messages.at(m_code) + ": < %1 >" }.arg(m_details);
+    return Messages.at(m_code) + ": < " + m_details + " >";
 }

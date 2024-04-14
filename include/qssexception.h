@@ -19,17 +19,17 @@ namespace qss
             ILL_FORMED_HEADER_PARAM
         };
 
-        Exception(int code, const QString& details = "")
+        Exception(int code, const std::string& details = "")
             : m_code{ code }, m_details{ details } {}
 
-        QString what() const;
+            std::string what() const;
 
     private:
 
-        static const std::unordered_map<int, QString> Messages;
+        static const std::unordered_map<int, std::string> Messages;
 
         int     m_code;
-        QString m_details;
+        std::string m_details;
     };
 }
 

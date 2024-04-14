@@ -13,22 +13,22 @@ namespace qss
         typedef typename std::deque<SelectorElement>::iterator Itr;
 
         Selector() {}
-        Selector(const QString& str);
+        Selector(const std::string& str);
         Selector& operator=(const Selector& selector);
 
         Selector& addChild(const SelectorElement& fragment);
-        Selector& addChild(const QString& fragment);
+        Selector& addChild(const std::string& fragment);
         Selector& addDescendant(const SelectorElement& fragment);
-        Selector& addDescendant(const QString& fragment);
+        Selector& addDescendant(const std::string& fragment);
         Selector& addGeneralSibling(const SelectorElement& fragment);
-        Selector& addGeneralSibling(const QString& fragment);
+        Selector& addGeneralSibling(const std::string& fragment);
         Selector& addSibling(const SelectorElement& fragment);
-        Selector& addSibling(const QString& fragment);
-        Selector& append(const QString& fragment, SelectorElement::PositionType type);
+        Selector& addSibling(const std::string& fragment);
+        Selector& append(const std::string& fragment, SelectorElement::PositionType type);
         Selector& append(const SelectorElement& fragment, SelectorElement::PositionType type);
 
-        void    parse(const QString& input);
-        QString toString() const;
+        void    parse(const std::string& input);
+        std::string toString() const;
         std::size_t fragmentCount() const  noexcept { return m_fragments.size(); }
 
         ConstItr cbegin() const noexcept { return m_fragments.cbegin(); }
@@ -51,10 +51,10 @@ namespace qss
 
     private:
 
-        void preProcess(QString& str);
+        void preProcess(std::string& str);
 
         const static char PreProcessChar = '`';
-        const static std::unordered_map<QString, SelectorElement::PositionType, QStringHasher> Combinators;
+        const static std::unordered_map<std::string, SelectorElement::PositionType> Combinators;
 
         std::deque<SelectorElement> m_fragments;
     };

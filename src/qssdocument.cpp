@@ -1,18 +1,28 @@
 #include "../include/qssdocument.h"
+#include <ctre.hpp>
 
 #include <algorithm>
-#include <regex>
 
-qss::Document::Document(const QString &qss)
+static constexpr auto commentPattern = ctll::fixed_string{ R"((//.*?$|/\*[\S\s]*?\*/)|(\\'(?:\\.|[^\\\\'])*\\'|"(?:\\.|[^\\"])*"))" };
+
+qss::Document::Document(const std::string &str)
 {
-    std::regex regRemoveComments(R"((//.*?$|/\*[\S\s]*?\*/)|(\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"))");
+    std::string strNoComments;
 
-    std::string str = qss.toStdString();
-    std::string strNoComments = std::regex_replace(str, regRemoveComments, "$2");
-    std::replace(strNoComments.begin(), strNoComments.end(), '\n', ' ');
+    size_t left = 0;
+    for (auto match : ctre::multiline_search_all<commentPattern>(str)) {
+        auto off = std::distance(str.begin(), match.begin());
+        auto end = std::distance(str.begin(), match.end());
+        if (off > left) {
+            strNoComments += str.substr(left, off - left);
+        }
+        left = end;
+    }
+    if (left < str.size()) {
+        strNoComments += str.substr(left);
+    }
 
-    QString qssNoComments = QString::fromStdString(strNoComments);
-    parse(qssNoComments);
+    parse(strNoComments);
 }
 
 qss::Document& qss::Document::addFragment(const Fragment& fragment, bool enabled)
@@ -42,7 +52,7 @@ qss::Document& qss::Document::toggleFragment(int index)
     return *this;
 }
 
-qss::Document& qss::Document::addFragment(const QString& fragment, bool enabled)
+qss::Document& qss::Document::addFragment(const std::string& fragment, bool enabled)
 {
     return addFragment(Fragment{ fragment }, enabled);
 }
@@ -53,11 +63,12 @@ qss::Document& qss::Document::enableFragment(int index, bool enable)
     return *this;
 }
 
-qss::Document& qss::Document::removeFragment(const QString& fragment)
+qss::Document& qss::Document::removeFragment(const std::string& fragment)
 {
-    std::remove_if(m_fragments.begin(), m_fragments.end(), [fragment](const QSSFragmentPair& existing){
-        return QString::compare(existing.first.toString(), Fragment{ fragment }.toString()) == 0;
+    auto it = std::remove_if(m_fragments.begin(), m_fragments.end(), [fragment](const QSSFragmentPair& existing){
+        return existing.first.toString() == Fragment{ fragment }.toString();
     });
+    (void)it;
     return *this;
 }
 
@@ -67,7 +78,7 @@ qss::Document& qss::Document::removeFragment(int index)
     return *this;
 }
 
-qss::Document& qss::Document::operator+=(const QString& fragment)
+qss::Document& qss::Document::operator+=(const std::string& fragment)
 {
     addFragment(fragment, true);
     return *this;
@@ -79,15 +90,15 @@ qss::Document& qss::Document::operator+=(const Document & qss)
     {
         addFragment(fragment.first, true);
     }
-    
+
     return *this;
 }
 
-qss::Document qss::Document::inheritable(const QString & input) const
+qss::Document qss::Document::inheritable(const std::string & input) const
 {
     Document qss;
     SelectorElement selector{ input };
-    
+
     for (const auto& pair : m_fragments)
     {
         const auto& fragment = pair.first;
@@ -121,10 +132,10 @@ qss::Document qss::Document::inheritable(const QString & input) const
     return qss;
 }
 
-void qss::Document::parse(const QString& input)
+void qss::Document::parse(const std::string& input)
 {
     auto insideStr = false;
-    QString fragment;
+    std::string fragment;
 
     for (auto i = 0; i < input.size(); ++i)
     {
@@ -139,7 +150,7 @@ void qss::Document::parse(const QString& input)
             continue;
         else
         {
-            if (input.at(i) == Delimiters.at(QSS_BLOCK_END_DELIMITER))
+            if (input.at(i) == Delimiters.at(QSS_BLOCK_END_DELIMITER)[0])
             {
                 m_fragments.emplace_back(std::make_pair(fragment, true));
                 fragment.clear();
@@ -148,9 +159,9 @@ void qss::Document::parse(const QString& input)
     }
 }
 
-QString qss::Document::toString() const
+std::string qss::Document::toString() const
 {
-    QString result;
+    std::string result;
 
     for (const auto& pair : m_fragments)
     {

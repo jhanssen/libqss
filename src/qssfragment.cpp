@@ -1,6 +1,6 @@
 #include "../include/qssfragment.h"
 
-qss::Fragment::Fragment(const QString & input)
+qss::Fragment::Fragment(const std::string & input)
 {
     parse(input);
 }
@@ -18,7 +18,7 @@ qss::Fragment& qss::Fragment::select(const Selector& selector)
     return *this;
 }
 
-qss::Fragment& qss::Fragment::select(const QString &selector)
+qss::Fragment& qss::Fragment::select(const std::string &selector)
 {
     m_selector.parse(selector);
     return *this;
@@ -30,7 +30,7 @@ qss::Fragment& qss::Fragment::addBlock(const PropertyBlock& block)
     return *this;
 }
 
-qss::Fragment& qss::Fragment::addBlock(const QString &block)
+qss::Fragment& qss::Fragment::addBlock(const std::string &block)
 {
     m_block += block;
     return *this;
@@ -48,46 +48,46 @@ qss::Fragment& qss::Fragment::addParam(const QStringPair &param)
     return *this;
 }
 
-qss::Fragment& qss::Fragment::addParam(const QString &key, const QString &val)
+qss::Fragment& qss::Fragment::addParam(const std::string &key, const std::string &val)
 {
     m_block.addParam(key, val);
     return *this;
 }
 
-qss::Fragment& qss::Fragment::enableParam(const QString &key, bool enable)
+qss::Fragment& qss::Fragment::enableParam(const std::string &key, bool enable)
 {
     m_block.enableParam(key, enable);
     return *this;
 }
 
-qss::Fragment& qss::Fragment::remove(const QString &name)
+qss::Fragment& qss::Fragment::remove(const std::string &name)
 {
     m_block.remove(name);
     return *this;
 }
 
-qss::Fragment& qss::Fragment::remove(const std::vector<QString> &names)
+qss::Fragment& qss::Fragment::remove(const std::vector<std::string> &names)
 {
     m_block.remove(names);
     return *this;
 }
 
-void qss::Fragment::parse(const QString &input)
+void qss::Fragment::parse(const std::string &input)
 {
-    auto str = input.trimmed();
+    auto str = TrimmedString(input);
 
     if (str.size() > 0)
     {
-        auto start = str.indexOf(Delimiters.at(QSS_BLOCK_START_DELIMITER));
-        auto end = str.indexOf(Delimiters.at(QSS_BLOCK_END_DELIMITER));
+        auto start = str.find(Delimiters.at(QSS_BLOCK_START_DELIMITER));
+        auto end = str.find(Delimiters.at(QSS_BLOCK_END_DELIMITER));
 
-        if ((end - start) > 0)
+        if (start != std::string::npos && end != std::string::npos && (end - start) > 0)
         {
-            QString header = str, body = str;
-            m_selector.parse(header.remove(start, header.size()).trimmed());
-            body = body.left(end);
-            body.remove(0, start + 1);
-            m_block.parse(body.trimmed());
+            std::string header = str, body = str;
+            m_selector.parse(TrimmedString(header.erase(start, header.size())));
+            body = body.substr(0, end);
+            body.erase(0, start + 1);
+            m_block.parse(TrimmedString(body));
         }
         else
         {
@@ -96,9 +96,9 @@ void qss::Fragment::parse(const QString &input)
     }
 }
 
-QString qss::Fragment::toString() const
+std::string qss::Fragment::toString() const
 {
-    QString result = m_selector.toString();
+    std::string result = m_selector.toString();
     result += " " + Delimiters.at(QSS_BLOCK_START_DELIMITER) + "\n";
     result += m_block.toString() + Delimiters.at(QSS_BLOCK_END_DELIMITER) + "\n";
     return result;

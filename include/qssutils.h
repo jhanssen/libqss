@@ -1,9 +1,7 @@
 #ifndef QSSUTILS_H
 #define QSSUTILS_H
 
-#include <QString>
-#include <QStringList>
-
+#include <string>
 #include <unordered_map>
 #include <vector>
 #include <deque>
@@ -45,19 +43,12 @@ namespace qss
         return local;
     }
 
-    struct QStringHasher
-    {
-        std::size_t operator()(const QString& str) const
-        {
-            return std::hash<std::string>()(str.toStdString());
-        }
-    };
-
     template <typename T> using InvalidablePair = std::pair<T, bool>;
-    using QStringPair = std::pair<QString, QString>;
+    using QStringPair = std::pair<std::string, std::string>;
     using QStringPairs = std::vector<QStringPair>;
-    using QStringMap = std::unordered_map<QString, QString, QStringHasher>;
-    using PropertyMap = std::unordered_map<QString, InvalidablePair<QString>, QStringHasher>;
+    using QStringMap = std::unordered_map<std::string, std::string>;
+    using QStringList = std::vector<std::string>;
+    using PropertyMap = std::unordered_map<std::string, InvalidablePair<std::string>>;
 
     enum Delimiter
     {
@@ -77,7 +68,7 @@ namespace qss
         QSS_SUB_CONTROL_DELIMITER
     };
 
-    const std::unordered_map<Delimiter, QString> Delimiters{
+    const std::unordered_map<Delimiter, std::string> Delimiters{
         { QSS_ID_DELIMITER, "#" },
         { QSS_CLASS_DELIMITER, "." },
         { QSS_ADJACENT_SIBLING_DELIMITER, "+" },
@@ -94,14 +85,59 @@ namespace qss
         { QSS_SUB_CONTROL_DELIMITER, "::" }
     };
 
-    inline QString QuotedString(const QString& input)
+    inline std::string QuotedString(const std::string& input)
     {
-        return QString{ "\"%1\"" }.arg(input);
+        return "\"" + input + "\"";
     }
 
-    QSS_API std::ostream& operator<<(std::ostream& stream, const QString& str);
-    
-    QSS_API std::ostream& operator<<(std::ostream& stream, const QStringList& list);
+    inline std::string TrimmedString(std::string str)
+    {
+        // remove trailing white space
+        while( !str.empty() && std::isspace( str.back() ) ) str.pop_back() ;
+
+        // return residue after leading white space
+        std::size_t pos = 0 ;
+        while( pos < str.size() && std::isspace( str[pos] ) ) ++pos ;
+        return str.substr(pos) ;
+    }
+
+    inline std::vector<std::string> SplitString(const std::string& str, char delim, bool keepEmpty = true)
+    {
+        std::vector<std::string> result;
+        auto left = str.begin();
+        for (auto it = left; it != str.end(); ++it)
+        {
+            if (*it == delim)
+            {
+                if (it > left || keepEmpty)
+                    result.emplace_back(&*left, it - left);
+                left = it + 1;
+            }
+        }
+        if (left != str.end())
+            result.emplace_back(&*left, str.end() - left);
+        return result;
+    }
+
+    inline std::vector<std::string> SplitString(const std::string& str, const std::string& delim, bool keepEmpty = true)
+    {
+        std::vector<std::string> result;
+        const auto dsz = delim.size();
+        size_t left = 0;
+        for (size_t idx = 0; idx < str.size(); ++idx)
+        {
+            // ### should be improved
+            if (str.substr(idx, dsz) == delim)
+            {
+                if (idx > left || keepEmpty)
+                    result.emplace_back(&str[left], idx - left);
+                left = idx + 1;
+            }
+        }
+        if (left != str.size())
+            result.emplace_back(&str[left], str.size() - left);
+        return result;
+    }
 }
 
 #endif

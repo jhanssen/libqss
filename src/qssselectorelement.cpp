@@ -1,6 +1,6 @@
 #include "../include/qssselectorelement.h"
 
-qss::SelectorElement::SelectorElement(const QString & str)
+qss::SelectorElement::SelectorElement(const std::string & str)
 {
     parse(str);
 }
@@ -15,15 +15,15 @@ qss::SelectorElement& qss::SelectorElement::operator=(const SelectorElement &fra
     return *this;
 }
 
-qss::SelectorElement& qss::SelectorElement::select(const QString &sel)
+qss::SelectorElement& qss::SelectorElement::select(const std::string &sel)
 {
-    m_name = sel.trimmed();
+    m_name = TrimmedString(sel);
     return *this;
 }
 
-qss::SelectorElement& qss::SelectorElement::on(const QString &key, const QString &value)
+qss::SelectorElement& qss::SelectorElement::on(const std::string &key, const std::string &value)
 {
-    m_params[key.trimmed()] = value;
+    m_params[TrimmedString(key)] = value;
     return *this;
 }
 
@@ -31,32 +31,32 @@ qss::SelectorElement& qss::SelectorElement::on(const QStringPairs &params)
 {
     for (const auto& param : params)
     {
-        m_params[param.first.trimmed()] = param.second;
+        m_params[TrimmedString(param.first)] = param.second;
     }
     return *this;
 }
 
-qss::SelectorElement& qss::SelectorElement::sub(const QString &name)
+qss::SelectorElement& qss::SelectorElement::sub(const std::string &name)
 {
     m_subControl = name;
     return *this;
 }
 
-qss::SelectorElement& qss::SelectorElement::when(const QString &pcl)
+qss::SelectorElement& qss::SelectorElement::when(const std::string &pcl)
 {
-    m_psuedoClass = pcl.trimmed();
+    m_psuedoClass = TrimmedString(pcl);
     return *this;
 }
 
-qss::SelectorElement& qss::SelectorElement::name(const QString &str)
+qss::SelectorElement& qss::SelectorElement::name(const std::string &str)
 {
-    m_id = str.trimmed();
+    m_id = TrimmedString(str);
     return *this;
 }
 
-void qss::SelectorElement::parse(const QString &str)
+void qss::SelectorElement::parse(const std::string &str)
 {
-    auto selector = str.trimmed();
+    auto selector = TrimmedString(str);
 
     if (selector.size() != 0)
     {
@@ -66,9 +66,9 @@ void qss::SelectorElement::parse(const QString &str)
     }
 }
 
-QString qss::SelectorElement::toString() const
+std::string qss::SelectorElement::toString() const
 {
-    QString result;
+    std::string result;
 
     if (m_name.size() > 0)
     {
@@ -136,23 +136,23 @@ bool qss::SelectorElement::isGeneralizedFrom(const SelectorElement &fragment) co
         }
     }
 
-    if (!m_id.isEmpty() && fragment.m_id != m_id)
+    if (!m_id.empty() && fragment.m_id != m_id)
     {
         return false;
     }
 
-    if (!m_name.isEmpty() && fragment.m_name != m_name)
+    if (!m_name.empty() && fragment.m_name != m_name)
     {
         return false;
     }
 
     // this's pseudo class should be empty or same as fragment
-    if (!m_psuedoClass.isEmpty() && fragment.m_psuedoClass != m_psuedoClass)
+    if (!m_psuedoClass.empty() && fragment.m_psuedoClass != m_psuedoClass)
     {
         return false;
     }
 
-    if (!m_subControl.isEmpty() && fragment.m_subControl != m_subControl)
+    if (!m_subControl.empty() && fragment.m_subControl != m_subControl)
     {
         return false;
     }
@@ -165,7 +165,7 @@ bool qss::SelectorElement::isSpecificThan(const SelectorElement &fragment) const
     return fragment.isGeneralizedFrom(*this);
 }
 
-QString qss::SelectorElement::value(const QString & key) const
+std::string qss::SelectorElement::value(const std::string & key) const
 {
     auto itr = m_params.find(key);
 
@@ -174,12 +174,12 @@ QString qss::SelectorElement::value(const QString & key) const
         return itr->second;
     }
 
-    return QString{};
+    return std::string{};
 }
 
-QString qss::SelectorElement::extractSubControlAndPsuedoClass(const QString &str)
+std::string qss::SelectorElement::extractSubControlAndPsuedoClass(const std::string &str)
 {
-    auto parts = str.split(Delimiters.at(QSS_PSEUDO_CLASS_DELIMITER));
+    auto parts = SplitString(str, Delimiters.at(QSS_PSEUDO_CLASS_DELIMITER));
 
     if (parts.size() > 1)
     {
@@ -200,11 +200,11 @@ QString qss::SelectorElement::extractSubControlAndPsuedoClass(const QString &str
     return parts[0];
 }
 
-QString qss::SelectorElement::extractParams(const QString &str)
+std::string qss::SelectorElement::extractParams(const std::string &str)
 {
-    auto parts = str.split(Delimiters.at(QSS_SELECT_PARAM_START_DELIMITER), Qt::SkipEmptyParts);
+    auto parts = SplitString(str, Delimiters.at(QSS_SELECT_PARAM_START_DELIMITER), false);
 
-    if (parts.size() == 1 && str.indexOf(Delimiters.at(QSS_SELECT_PARAM_START_DELIMITER)) != -1)
+    if (parts.size() == 1 && str.find(Delimiters.at(QSS_SELECT_PARAM_START_DELIMITER)) != std::string::npos)
     {
         throw Exception{ Exception::ILL_FORMED_HEADER_PARAM, str };
     }
@@ -213,16 +213,16 @@ QString qss::SelectorElement::extractParams(const QString &str)
     {
         for (int i = 1; i < parts.size(); ++i)
         {
-            auto params = parts[i].split(Delimiters.at(QSS_PARAM_DELIMITER));
+            auto params = SplitString(parts[i], Delimiters.at(QSS_PARAM_DELIMITER));
             if (params.size() != 2)
             {
                 throw Exception{ Exception::HEADER_PARAM_INVALID, parts[i] };
             }
             else
             {
-                auto value = params[1].remove(0, 1);
+                auto value = params[1].erase(0, 1);
                 auto size = value.size();
-                value = value.remove(size - 2, 2);
+                value = value.erase(size - 2, 2);
                 m_params[params[0]] = value;
             }
         }
@@ -232,11 +232,11 @@ QString qss::SelectorElement::extractParams(const QString &str)
     return parts.size() > 0 ? parts[0] : "";
 }
 
-void qss::SelectorElement::extractNameAndSelector(const QString &str)
+void qss::SelectorElement::extractNameAndSelector(const std::string &str)
 {
-    auto select = str.split(Delimiters.at(QSS_ID_DELIMITER));
-    auto parts = select[0].split(Delimiters.at(QSS_CLASS_DELIMITER), Qt::SkipEmptyParts);
-    if (parts.size()) m_name = parts[0].trimmed();
+    auto select = SplitString(str, Delimiters.at(QSS_ID_DELIMITER));
+    auto parts = SplitString(select[0], Delimiters.at(QSS_CLASS_DELIMITER), false);
+    if (parts.size()) m_name = TrimmedString(parts[0]);
 
     for (auto i = 1; i < parts.size(); ++i)
     {
@@ -245,8 +245,8 @@ void qss::SelectorElement::extractNameAndSelector(const QString &str)
 
     if (select.size() == 2)
     {
-        parts = select[1].split(Delimiters.at(QSS_CLASS_DELIMITER), Qt::SkipEmptyParts);
-        m_id = parts[0].trimmed();
+        parts = SplitString(select[1], Delimiters.at(QSS_CLASS_DELIMITER), false);
+        m_id = TrimmedString(parts[0]);
 
         for (auto i = 1; i < parts.size(); ++i)
         {
@@ -264,7 +264,7 @@ bool qss::operator==(const SelectorElement &lhs, const SelectorElement &rhs)
     return lhs.toString() == rhs.toString();
 }
 
-const std::unordered_map<int, QString> qss::SelectorElement::Combinators{
+const std::unordered_map<int, std::string> qss::SelectorElement::Combinators{
     { SelectorElement::CHILD, ">" }, { SelectorElement::DESCENDANT, "" },
     { SelectorElement::SIBLING, "~" }, { SelectorElement::GENERAL_SIBLING, "+" },
     { SelectorElement::PARENT, "" }, { SelectorElement::ADJACENT, "," }

@@ -11,19 +11,19 @@ namespace qss
     public:
 
         Fragment() {}
-        Fragment(const QString& str);
+        Fragment(const std::string& str);
         Fragment& operator=(const Fragment& fragment);
 
         Fragment& select(const Selector& selector);
-        Fragment& select(const QString& selector);
+        Fragment& select(const std::string& selector);
         Fragment& addBlock(const PropertyBlock& block);
-        Fragment& addBlock(const QString& block);
+        Fragment& addBlock(const std::string& block);
         Fragment& addBlock(const QStringPairs& block);
         Fragment& addParam(const QStringPair& param);
-        Fragment& addParam(const QString& key, const QString& val);
-        Fragment& enableParam(const QString& key, bool enable = false);
-        Fragment& remove(const QString& name);
-        Fragment& remove(const std::vector<QString>& names);
+        Fragment& addParam(const std::string& key, const std::string& val);
+        Fragment& enableParam(const std::string& key, bool enable = false);
+        Fragment& remove(const std::string& name);
+        Fragment& remove(const std::vector<std::string>& names);
 
         const Selector& selector() const noexcept { return m_selector; }
         const PropertyBlock& block() const noexcept { return m_block; }
@@ -31,8 +31,8 @@ namespace qss
         Selector& selector() noexcept { return m_selector; }
         PropertyBlock& block() noexcept { return m_block; }
 
-        void    parse(const QString& input);
-        QString toString() const;
+        void    parse(const std::string& input);
+        std::string toString() const;
 
         friend bool operator==(const Fragment& lhs, const Fragment& rhs);
 

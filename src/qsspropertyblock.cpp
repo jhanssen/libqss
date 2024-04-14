@@ -1,6 +1,6 @@
 #include "../include/qsspropertyblock.h"
 
-qss::PropertyBlock::PropertyBlock(const QString & str)
+qss::PropertyBlock::PropertyBlock(const std::string & str)
 {
     parse(str);
 }
@@ -11,10 +11,10 @@ qss::PropertyBlock& qss::PropertyBlock::operator=(const PropertyBlock &block)
     return *this;
 }
 
-qss::PropertyBlock& qss::PropertyBlock::addParam(const QString &key, const QString &value)
+qss::PropertyBlock& qss::PropertyBlock::addParam(const std::string &key, const std::string &value)
 {
-    auto tkey = key.trimmed();
-    m_params[tkey].first = value.trimmed();
+    auto tkey = TrimmedString(key);
+    m_params[tkey].first = TrimmedString(value);
     m_params[tkey].second = true;
     return *this;
 }
@@ -23,17 +23,17 @@ qss::PropertyBlock& qss::PropertyBlock::addParam(const QStringPairs &params)
 {
     for (const auto& param : params)
     {
-        auto tkey = param.first.trimmed();
-        m_params[tkey].first = param.second.trimmed();
+        auto tkey = TrimmedString(param.first);
+        m_params[tkey].first = TrimmedString(param.second);
         m_params[tkey].second = true;
     }
 
     return *this;
 }
 
-qss::PropertyBlock& qss::PropertyBlock::enableParam(const QString &key, bool enable)
+qss::PropertyBlock& qss::PropertyBlock::enableParam(const std::string &key, bool enable)
 {
-    auto tkey = key.trimmed();
+    auto tkey = TrimmedString(key);
     auto itr = m_params.find(tkey);
 
     if (itr != m_params.cend())
@@ -44,9 +44,9 @@ qss::PropertyBlock& qss::PropertyBlock::enableParam(const QString &key, bool ena
     return *this;
 }
 
-qss::PropertyBlock& qss::PropertyBlock::toggleParam(const QString &key)
+qss::PropertyBlock& qss::PropertyBlock::toggleParam(const std::string &key)
 {
-    auto tkey = key.trimmed();
+    auto tkey = TrimmedString(key);
     auto itr = m_params.find(tkey);
 
     if (itr != m_params.cend())
@@ -57,7 +57,7 @@ qss::PropertyBlock& qss::PropertyBlock::toggleParam(const QString &key)
     return *this;
 }
 
-qss::PropertyBlock& qss::PropertyBlock::remove(const QString &key)
+qss::PropertyBlock& qss::PropertyBlock::remove(const std::string &key)
 {
     if (m_params.count(key))
     {
@@ -67,7 +67,7 @@ qss::PropertyBlock& qss::PropertyBlock::remove(const QString &key)
     return *this;
 }
 
-qss::PropertyBlock& qss::PropertyBlock::remove(const std::vector<QString> &keys)
+qss::PropertyBlock& qss::PropertyBlock::remove(const std::vector<std::string> &keys)
 {
     for (auto const& key : keys)
     {
@@ -87,30 +87,30 @@ qss::PropertyBlock& qss::PropertyBlock::operator+=(const PropertyBlock & block)
     return *this;
 }
 
-qss::PropertyBlock& qss::PropertyBlock::operator+=(const QString & block)
+qss::PropertyBlock& qss::PropertyBlock::operator+=(const std::string & block)
 {
     return this->operator+=(PropertyBlock{ block });
 }
 
-void qss::PropertyBlock::parse(const QString &input)
+void qss::PropertyBlock::parse(const std::string &input)
 {
-    auto str = input.trimmed();
+    auto str = TrimmedString(input);
 
     if (str.size() > 0)
     {
-        auto parts = str.split(Delimiters.at(QSS_STATEMENT_END_DELIMITER), Qt::SkipEmptyParts);
+        auto parts = SplitString(str, Delimiters.at(QSS_STATEMENT_END_DELIMITER), false);
 
         for (auto const& part : parts)
         {
-            auto line = part.split(Delimiters.at(QSS_PSEUDO_CLASS_DELIMITER), Qt::SkipEmptyParts);
+            auto line = SplitString(part, Delimiters.at(QSS_PSEUDO_CLASS_DELIMITER), false);
 
             // Allow more than 2 types in split, because the property value may
             // contain further delimiters inside quotes. This is not a solution,
             // but only a workaround: a full parsing of quoted content must be done instead.
             if (line.size() >= 2)
             {
-                auto key = line[0].trimmed();
-                auto value = line[1].trimmed();
+                auto key = TrimmedString(line[0]);
+                auto value = TrimmedString(line[1]);
                 m_params[key].first = value;
                 m_params[key].second = true;
             }
@@ -122,9 +122,9 @@ void qss::PropertyBlock::parse(const QString &input)
     }
 }
 
-QString qss::PropertyBlock::toString() const
+std::string qss::PropertyBlock::toString() const
 {
-    QString result;
+    std::string result;
 
     for (auto const& pair : m_params)
     {
