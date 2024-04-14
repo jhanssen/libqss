@@ -24,9 +24,9 @@
 #endif // _WIN32
 
 
-#define LOG(X)  { std::cout << qss::tab(2) << X << std::endl; }
-#define START() { std::cout << qss::tab(1) << "In [" __FUNCTION__ << "]" << std::endl; }
-#define END() { qss::tab(0); std::cout << qss::tab(2) << "Out [" __FUNCTION__ << "]" << std::endl; }
+// #define LOG(X)  { std::cout << qss::tab(2) << X << std::endl; }
+// #define START() { std::cout << qss::tab(1) << "In [" __FUNCTION__ << "]" << std::endl; }
+// #define END() { qss::tab(0); std::cout << qss::tab(2) << "Out [" __FUNCTION__ << "]" << std::endl; }
 
 namespace qss
 {
