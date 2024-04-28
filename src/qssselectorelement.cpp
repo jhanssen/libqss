@@ -64,6 +64,15 @@ qss::SelectorElement& qss::SelectorElement::on(const QStringPairs &params)
     return *this;
 }
 
+qss::SelectorElement& qss::SelectorElement::off(const std::string &key)
+{
+    auto itr = m_params.find(key);
+    if (itr != m_params.end()) {
+        m_params.erase(itr);
+    }
+    return *this;
+}
+
 qss::SelectorElement& qss::SelectorElement::sub(const std::string &name)
 {
     m_subControl = TrimmedString(name);
