@@ -1,5 +1,33 @@
 #include "../include/qssselectorelement.h"
 
+namespace {
+inline qss::SelectorElement::PseudoState pseudoStateFromString(std::string&& str)
+{
+    if (str.size() == 0) {
+        return {
+            std::string {},
+            false
+        };
+    }
+    if (str[0] == '!') {
+        if (str.size() == 1) {
+            return {
+                std::string {},
+                true
+            };
+        }
+        return {
+            qss::TrimmedString(str.substr(1)),
+            true
+        };
+    }
+    return {
+        std::move(str),
+        false
+    };
+}
+}
+
 qss::SelectorElement::SelectorElement(const std::string & str)
 {
     parse(str);
@@ -7,7 +35,7 @@ qss::SelectorElement::SelectorElement(const std::string & str)
 
 qss::SelectorElement& qss::SelectorElement::operator=(const SelectorElement &fragment)
 {
-    m_psuedoClass = fragment.m_psuedoClass;
+    m_pseudoStates = fragment.m_pseudoStates;
     m_name = fragment.m_name;
     m_params = fragment.m_params;
     m_id = fragment.m_id;
@@ -31,26 +59,50 @@ qss::SelectorElement& qss::SelectorElement::on(const QStringPairs &params)
 {
     for (const auto& param : params)
     {
-        m_params[TrimmedString(param.first)] = param.second;
+        m_params[TrimmedString(param.first)] = TrimmedString(param.second);
     }
     return *this;
 }
 
 qss::SelectorElement& qss::SelectorElement::sub(const std::string &name)
 {
-    m_subControl = name;
+    m_subControl = TrimmedString(name);
     return *this;
 }
 
 qss::SelectorElement& qss::SelectorElement::when(const std::string &pcl)
 {
-    m_psuedoClass = TrimmedString(pcl);
+    m_pseudoStates.push_back(pseudoStateFromString(TrimmedString(pcl)));
+    return *this;
+}
+
+qss::SelectorElement& qss::SelectorElement::id(const std::string &str)
+{
+    m_id = TrimmedString(str);
     return *this;
 }
 
 qss::SelectorElement& qss::SelectorElement::name(const std::string &str)
 {
-    m_id = TrimmedString(str);
+    m_name = TrimmedString(str);
+    return *this;
+}
+
+qss::SelectorElement& qss::SelectorElement::clazz(const std::string& str)
+{
+    auto it = std::find(m_classes.begin(), m_classes.end(), str);
+    if (it == m_classes.end()) {
+        m_classes.push_back(str);
+    }
+    return *this;
+}
+
+qss::SelectorElement& qss::SelectorElement::noclazz(const std::string& str)
+{
+    auto it = std::find(m_classes.begin(), m_classes.end(), str);
+    if (it != m_classes.end()) {
+        m_classes.erase(it);
+    }
     return *this;
 }
 
@@ -60,7 +112,7 @@ void qss::SelectorElement::parse(const std::string &str)
 
     if (selector.size() != 0)
     {
-        auto remaining = extractSubControlAndPsuedoClass(selector);
+        auto remaining = extractSubControlAndPseudoState(selector);
         remaining = extractParams(remaining);
         extractNameAndSelector(remaining);
     }
@@ -97,9 +149,15 @@ std::string qss::SelectorElement::toString() const
         result += Delimiters.at(QSS_SUB_CONTROL_DELIMITER) + m_subControl;
     }
 
-    if (m_psuedoClass.size() > 0)
+    if (!m_pseudoStates.empty())
     {
-        result += Delimiters.at(QSS_PSEUDO_CLASS_DELIMITER) + m_psuedoClass;
+        for (const auto& pseudo : m_pseudoStates) {
+            if (pseudo.negated) {
+                result += Delimiters.at(QSS_PSEUDO_CLASS_DELIMITER) + '!' + pseudo.name;
+            } else {
+                result += Delimiters.at(QSS_PSEUDO_CLASS_DELIMITER) + pseudo.name;
+            }
+        }
     }
 
     return result;
@@ -147,9 +205,19 @@ bool qss::SelectorElement::isGeneralizedFrom(const SelectorElement &fragment) co
     }
 
     // this's pseudo class should be empty or same as fragment
-    if (!m_psuedoClass.empty() && fragment.m_psuedoClass != m_psuedoClass)
+    for (const auto& ps : m_pseudoStates)
     {
-        return false;
+        auto itr = std::find_if(fragment.m_pseudoStates.cbegin(), fragment.m_pseudoStates.cend(), [&ps](const auto& ops) -> bool {
+            return ops.name == ps.name;
+        });
+        if (!ps.negated && itr == fragment.m_pseudoStates.end())
+        {
+            return false;
+        }
+        else if (ps.negated && itr != fragment.m_pseudoStates.end())
+        {
+            return false;
+        }
     }
 
     if (!m_subControl.empty() && fragment.m_subControl != m_subControl)
@@ -177,7 +245,7 @@ std::string qss::SelectorElement::value(const std::string & key) const
     return std::string{};
 }
 
-std::string qss::SelectorElement::extractSubControlAndPsuedoClass(const std::string &str)
+std::string qss::SelectorElement::extractSubControlAndPseudoState(const std::string &str)
 {
     auto parts = SplitString(str, Delimiters.at(QSS_PSEUDO_CLASS_DELIMITER));
 
@@ -186,14 +254,15 @@ std::string qss::SelectorElement::extractSubControlAndPsuedoClass(const std::str
         if (parts[1].size() == 0 && parts.size() > 2)
         {
             m_subControl = parts[2];
-            if (parts.size() > 3)
-            {
-                m_psuedoClass = parts[3];
+            for (size_t pos = 3; pos < parts.size(); ++pos) {
+                m_pseudoStates.push_back(pseudoStateFromString(std::move(parts[pos])));
             }
         }
         else
         {
-            m_psuedoClass = parts[1];
+            for (size_t pos = 1; pos < parts.size(); ++pos) {
+                m_pseudoStates.push_back(pseudoStateFromString(std::move(parts[pos])));
+            }
         }
     }
 
@@ -235,7 +304,7 @@ std::string qss::SelectorElement::extractParams(const std::string &str)
 void qss::SelectorElement::extractNameAndSelector(const std::string &str)
 {
     auto select = SplitString(str, Delimiters.at(QSS_ID_DELIMITER));
-    auto parts = SplitString(select[0], Delimiters.at(QSS_CLASS_DELIMITER), false);
+    auto parts = SplitString(select[0], Delimiters.at(QSS_CLASS_DELIMITER), true);
     if (parts.size()) m_name = TrimmedString(parts[0]);
 
     for (auto i = 1; i < parts.size(); ++i)

@@ -14,6 +14,11 @@ namespace qss
         {
             ADJACENT, PARENT, CHILD, DESCENDANT, SIBLING, GENERAL_SIBLING
         };
+        struct PseudoState
+        {
+            std::string name;
+            bool negated;
+        };
 
         SelectorElement() {}
         SelectorElement(const std::string& str);
@@ -24,14 +29,16 @@ namespace qss
         SelectorElement& on(const QStringPairs& params);
         SelectorElement& sub(const std::string& name);
         SelectorElement& when(const std::string& pcl);
+        SelectorElement& id(const std::string& str);
         SelectorElement& name(const std::string& str);
+        SelectorElement& clazz(const std::string& str);
+        SelectorElement& noclazz(const std::string& str);
 
         void    parse(const std::string& input);
         std::string toString() const;
         bool    isGeneralizedFrom(const SelectorElement& fragment) const;
         bool    isSpecificThan(const SelectorElement& fragment) const;
         std::string id() const { return m_id; }
-        std::string psuedoClass() const { return m_psuedoClass; }
         std::string subControl() const { return m_subControl; }
         std::string name() const { return m_name; }
         std::string value(const std::string& key) const;
@@ -40,6 +47,7 @@ namespace qss
 
         const QStringList& classes() const noexcept { return m_classes; }
         const QStringMap& params() const noexcept { return m_params; }
+        const std::vector<PseudoState> pseudoStates() const { return m_pseudoStates; }
 
         std::size_t classCount() const noexcept { return m_classes.size(); }
         std::size_t paramCount() const noexcept { return m_params.size(); }
@@ -52,17 +60,17 @@ namespace qss
 
         friend class Selector;
 
-        std::string extractSubControlAndPsuedoClass(const std::string& str);
+        std::string extractSubControlAndPseudoState(const std::string& str);
         std::string extractParams(const std::string& str);
         void    extractNameAndSelector(const std::string& str);
 
         std::string      m_name;
         std::string      m_id;
         std::string      m_subControl;
-        std::string      m_psuedoClass;
         QStringMap   m_params;
         PositionType m_position = PARENT;
         QStringList  m_classes;
+        std::vector<PseudoState> m_pseudoStates;
     };
 
     bool operator==(const SelectorElement& lhs, const SelectorElement& rhs);
