@@ -72,7 +72,27 @@ qss::SelectorElement& qss::SelectorElement::sub(const std::string &name)
 
 qss::SelectorElement& qss::SelectorElement::when(const std::string &pcl)
 {
-    m_pseudoStates.push_back(pseudoStateFromString(TrimmedString(pcl)));
+    auto pc = pseudoStateFromString(TrimmedString(pcl));
+    auto itr = std::find_if(m_pseudoStates.begin(), m_pseudoStates.end(), [&pc](const auto& ops) -> bool {
+        return ops.name == pc.name;
+    });
+    if (itr != m_pseudoStates.end()) {
+        itr->negated = pc.negated;
+    } else {
+        m_pseudoStates.push_back(std::move(pc));
+    }
+    return *this;
+}
+
+qss::SelectorElement& qss::SelectorElement::nowhen(const std::string &pcl)
+{
+    auto pc = pseudoStateFromString(TrimmedString(pcl));
+    auto itr = std::find_if(m_pseudoStates.begin(), m_pseudoStates.end(), [&pc](const auto& ops) -> bool {
+        return ops.negated == pc.negated && ops.name == pc.name;
+    });
+    if (itr != m_pseudoStates.end()) {
+        m_pseudoStates.erase(itr);
+    }
     return *this;
 }
 

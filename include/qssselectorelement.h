@@ -29,6 +29,7 @@ namespace qss
         SelectorElement& on(const QStringPairs& params);
         SelectorElement& sub(const std::string& name);
         SelectorElement& when(const std::string& pcl);
+        SelectorElement& nowhen(const std::string& pcl);
         SelectorElement& id(const std::string& str);
         SelectorElement& name(const std::string& str);
         SelectorElement& clazz(const std::string& str);
