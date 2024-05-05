@@ -151,11 +151,33 @@ void qss::Selector::preProcess(std::string &str)
 {
     int quotes = str[0] == '"';
 
-    for (int i = 1; i < str.size(); ++i)
+    for (size_t i = 1; i < str.size(); ++i)
     {
-        if (isspace(str[i]) && (quotes % 2 == 0))
-        {
-            str[i] = PreProcessChar;
+        if (quotes % 2 == 0) {
+            if (isspace(str[i]))
+            {
+                str[i] = PreProcessChar;
+            }
+            else if (i > 0)
+            {
+                switch (str[i]) {
+                case '>':
+                case '~':
+                case '+':
+                case ',': {
+                    size_t add = 0;
+                    if (str[i - 1] != PreProcessChar) {
+                        str.insert(str.begin() + i, PreProcessChar);
+                        add += 1;
+                    }
+                    if (i + add + 1 < str.size() && str[i + add + 1] != ' ') {
+                        str.insert(str.begin() + i + 1 + add, PreProcessChar);
+                        add += 1;
+                    }
+                    i += add;
+                    break; }
+                }
+            }
         }
 
         quotes += (str[i] == '"' && str[i - 1] != '\\');
