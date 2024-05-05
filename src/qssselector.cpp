@@ -170,7 +170,7 @@ void qss::Selector::preProcess(std::string &str)
                         str.insert(str.begin() + i, PreProcessChar);
                         add += 1;
                     }
-                    if (i + add + 1 < str.size() && str[i + add + 1] != ' ') {
+                    if (i + add + 1 < str.size() && !isspace(str[i + add + 1])) {
                         str.insert(str.begin() + i + 1 + add, PreProcessChar);
                         add += 1;
                     }
